@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./icon.png" alt="Cloudflare Search Icon" width="150" style="border-radius: 15px;"/>
+  <img src="./Logo.png" alt="Cloudflare Search Icon" width="150" style="border-radius: 15px;"/>
 </p>
 
 # ⚡️ Cloudflare Worker V2Ray Optimizer
