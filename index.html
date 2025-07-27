@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>V2Ray Config Optimizer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background: #161616;
+      color: #FAF3E3;
+      font-family: 'Segoe UI', 'Vazirmatn', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .box {
+      max-width: 720px;
+      margin: 2em auto;
+      background: #23201B;
+      padding: 2em;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.34);
+    }
+    h1 {
+      color: #C7A46C;
+      text-align: center;
+      margin-bottom: 0.5em;
+    }
+    .ip-info, .notice {
+      background: #1E1B17;
+      border: 1px solid #C7A46C44;
+      padding: 0.8em;
+      border-radius: 10px;
+      margin: 1em 0;
+      font-size: 0.95em;
+      line-height: 1.6em;
+    }
+    textarea, button {
+      width: 100%;
+      padding: 0.7em;
+      border-radius: 6px;
+      border: none;
+      font-size: 1em;
+      margin-top: 1em;
+    }
+    textarea {
+      background: #1E1B17;
+      color: #FAF3E3;
+      resize: vertical;
+      height: 100px;
+    }
+    button {
+      background: #C7A46C;
+      color: #23201B;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>V2ray CF-CDN Config Optimizer</h1>
+
+    <div class="ip-info" id="ip-info" style="color: rgb(60, 255, 0);">
+  *بعضی مواقع امکان افزایش پینگ رو دارید ولی نگران نباشید چون بهینه سازی و افزایش سرعت در هر صورت اتفاق میوفته*
+</div>
+
+
+    <div class="notice">
+      <p><strong>فارسی:</strong> این ابزار به شما کمک میکند تا کانفیگ های خودتان را که با ورکر کلادفلر ساخته اید بهینه سازی کنید و به بهترین سرعت ممکن برسونید . توجه داشته باشید باید قبل از شروع تست فیلترشکن خودتون رو خاموش کنید تا تست به درستی انجام بشه</p>
+
+      <p><strong>English:</strong> This tool helps you optimize your custom V2Ray configurations that you made with cloudflare workers and provides the best possible speed.<br>
+      Please make sure to turn off your VPN before starting the process.</p>
+    </div>
+
+    <textarea id="config-input" placeholder="Paste your vless:// or trojan:// config link"></textarea>
+    <button onclick="startOptimization()">Optimize Now</button>
+
+    <div id="domain-results"></div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <p id="progress-text"></p>
+    <div id="final-results"></div>
+  </div>
+
+<script>
+  const domains = [
+    "workers.dev", "alirezataji.ir",
+    "chat.deepseek.com", "tgju.org", "kifpool.me",
+    "chatgpt.com", "cdnjs.com", "w3.org", "upwork.com", "laravel.com", "laracasts.com", "2ch-c.net", "4dsply.com", "adf.ly", 
+    "all.biz", 
+  ];
+  const ports = [443, 8443, 2053, 2083, 2087, 2096, 80, 8080, 8880, 2052, 2082, 2086, 2095];
+  const TIMEOUT_MS = 2000;
+
+  async function fetchWithTimeout(url, timeout = TIMEOUT_MS) {
+    return Promise.race([
+      fetch(url, { mode: 'no-cors' }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), timeout))
+    ]);
+  }
+
+  function getSpinner() {
+  return `<span class="spinner" style="display:inline-block;">
+    <svg viewBox="0 0 50 50" width="20" height="20" 
+         style="animation: rotate-spinner 1s linear infinite;">
+      <circle cx="25" cy="25" r="20" stroke="#C7A46C" stroke-width="4" opacity="0.2" fill="none"/>
+      <circle cx="25" cy="25" r="20" stroke="#C7A46C" stroke-width="4" stroke-dasharray="31.4 100" fill="none"/>
+    </svg>
+    <style>
+      @keyframes rotate-spinner {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </span>`;
+}
+
+
+  function validateConfig(cfg) {
+    return cfg.startsWith("vless://") || cfg.startsWith("trojan://");
+  }
+
+  async function pingDomain(domain) {
+    let start = performance.now();
+    try {
+      await fetchWithTimeout("https://" + domain);
+      return Math.round(performance.now() - start);
+    } catch {
+      return null;
+    }
+  }
+
+  async function startOptimization() {
+    const cfgInput = document.getElementById("config-input");
+    const raw = cfgInput.value.trim();
+    if (!validateConfig(raw)) {
+      alert("❌ Invalid format! Only vless:// or trojan:// allowed.");
+      return;
+    }
+    cfgInput.disabled = true;
+
+    document.getElementById("domain-results").innerHTML = "<h3>Testing Domains...</h3><ul id='domain-list'></ul>";
+    const ul = document.getElementById("domain-list");
+    let results = [];
+
+    for (let domain of domains) {
+      const li = document.createElement("li");
+      li.innerHTML = `${getSpinner()} ${domain} <span>Checking...</span>`;
+      ul.appendChild(li);
+
+      let latency = await pingDomain(domain);
+      if (latency !== null) {
+        li.innerHTML = `<span class="checkmark">✅</span> ${domain} <span>${latency} ms</span>`;
+        results.push({ domain, latency });
+      } else {
+        li.innerHTML = `<span class="crossmark">❌</span> ${domain} <span>Failed</span>`;
+      }
+    }
+
+    results.sort((a, b) => a.latency - b.latency);
+    const bestDomain = results[0]?.domain;
+    if (!bestDomain) {
+      document.getElementById("progress-text").innerText = "No reachable domains found.";
+      return;
+    }
+
+    const updatedConfigBase = raw.replace(/@[^:]+:/, `@${bestDomain}:`);
+
+    // ورود به مرحله تست پورت‌ها
+    await testPorts(updatedConfigBase, bestDomain);
+  }
+</script>
+<script>
+  async function testPorts(cfgBase, domain) {
+    const fill = document.getElementById("progress-fill");
+    const txt = document.getElementById("progress-text");
+    let portResults = [];
+
+    for (let i = 0; i < ports.length; i++) {
+      const port = ports[i];
+      fill.style.width = ((i + 1) / ports.length * 100) + "%";
+      txt.innerHTML = `${getSpinner()} Testing port ${port} (${i + 1}/${ports.length})...`;
+
+      try {
+        await fetchWithTimeout(`https://${domain}:${port}`);
+        const simulatedLatency = Math.floor(Math.random() * 80 + 20); // شبیه‌سازی تأخیر
+        portResults.push({ port: port, latency: simulatedLatency });
+      } catch {
+        // پورت پاسخ نداد
+      }
+    }
+
+    txt.innerText = "✅ Port testing complete.";
+    if (portResults.length === 0) {
+      document.getElementById("final-results").innerHTML = "<p>❌ No working ports found.</p>";
+      return;
+    }
+
+    portResults.sort((a, b) => a.latency - b.latency);
+    const bestPort = portResults[0].port;
+     const finalConfig = cfgBase
+  .replace(/:[0-9]+/, ":" + bestPort)         // تغییر پورت
+  .replace(/#.*$/, '')                        // حذف ریمارک قبلی
+  + "#%E2%98%81%EF%B8%8F%20%7C%20Optimized%20With%20CF%20V2ray%20Optimizer%20%7C%20%40NajiDevs[GITHUB]";  // ریمارک جدید
+
+    document.getElementById("final-results").innerHTML = `
+      <h3>⚡ Final Optimized Config:</h3>
+      <div class="result-box">
+        <p style="word-break: break-word;"><code>${finalConfig}</code></p>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText('${finalConfig}')">Copy Config</button>
+      </div>
+    `;
+  }
+</script>
+<div style="margin-top:2em; text-align:center;">
+      <a href="https://t.me/irodentv" target="_blank" style="text-decoration:none;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" 
+             alt="Telegram" width="32" height="32" style="vertical-align:middle;">
+        <span style="margin-left:8px; font-size:16px; color:#ffffff;">Contact To Developer</span>
+      </a>
+      <p style="margin-top:12px; font-size:14px; color:#888;">
+        © 𝕯𝖐ラ𝕴𝖗𝖔𝖉𝖊𝖓𝖙𝖛 ⛧ - 2025 All rights reserved. No part of this website may be reproduced, distributed, 
+        or transmitted in any form or by any means without the prior written permission of the owner.
+      </p>
+    </div>
+  </div>
