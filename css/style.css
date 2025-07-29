@@ -10,7 +10,7 @@ body {
     color: #faf3e3;
     height: 100vh;
     direction: rtl;
-    background-size: 700% 700%;
+    background-size: 1000% 1000%;
     animation: gradientMove 25s ease-in-out infinite;
 }
 
