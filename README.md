@@ -16,7 +16,7 @@
 - ⚡ **عملکرد بهینه** - سرعت بالا و تجربه کاربری بهتر
 - 🔄 **سیستم اعلان‌ها** - بازخورد فوری برای کاربر
 - 💾 **ذخیره تنظیمات** - به خاطر سپردن زبان انتخابی کاربر
-- --> با تشکر ویژه از [@EmadN87](https://github.com/emadn87)عزیز
+- --> با تشکر ویژه از [@EmadN87](https://github.com/emadn87) عزیز برای بازطراحی UI پروژه
 
 ⚠️ **توجه :**  
 قبل از شروع تست، لطفاً فیلترشکن یا VPN خود را خاموش کنید تا فرایند تحلیل بدون اختلال انجام شود.
@@ -36,6 +36,7 @@ This tool helps you optimize your custom V2Ray configurations created using Clou
 - ⚡ **Optimized Performance** - High speed and better user experience
 - 🔄 **Notification System** - Instant feedback for users
 - 💾 **Settings Persistence** - Remember user's language preference
+- --> Special Thanks For Dear [@EmadN87](https://github.com/emadn87) For Redesigning The UI Of The Project
 
 ⚠️ **Important Note:**  
 Before starting the analysis, make sure to turn off any active VPN to ensure accurate testing.
