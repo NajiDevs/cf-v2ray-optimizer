@@ -8,10 +8,10 @@
 body {
     background: linear-gradient(-45deg, #353535, #584a30, #3d3321, #1E1E1EDE, #493d28, #000);
     color: #faf3e3;
-    height: 200vh;
+    height: 350vh;
     direction: rtl;
-    background-size: 1000% 1000%;
-    animation: gradientMove 25s ease-in-out infinite;
+    background-size: 400% 400%;
+    animation: gradientMove 10s ease-in-out infinite;
 }
 
 @keyframes gradientMove {
@@ -34,9 +34,8 @@ body[lang='en'] {
     background: linear-gradient(145deg, #23201b 0%, #2a2a2a 100%);
     padding: 2.5em;
     border-radius: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(199, 164, 108, 0.1);
-    backdrop-filter: blur(10px);
     position: relative;
     overflow: hidden;
 }
@@ -83,15 +82,13 @@ body[lang='en'] {
     border-radius: 25px;
     padding: 0.8em 1.5em;
     cursor: pointer;
-    transition: all 0.3s ease;
     font-size: 0.9em;
     font-weight: 600;
     color: #c7a46c;
     display: flex;
     align-items: center;
     gap: 0.5em;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 4px 15px rgba(199, 164, 108, 0.1);
+    box-shadow: 0 2px 8px rgba(199, 164, 108, 0.1);
     min-width: 120px;
     justify-content: center;
 }
@@ -103,7 +100,7 @@ body[lang='en'] {
         rgba(199, 164, 108, 0.15)
     );
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(199, 164, 108, 0.2);
+    box-shadow: 0 4px 12px rgba(199, 164, 108, 0.2);
     border-color: rgba(199, 164, 108, 0.5);
 }
 
@@ -189,7 +186,6 @@ textarea {
     color: #faf3e3;
     resize: vertical;
     min-height: 120px;
-    transition: all 0.3s ease;
     font-family: 'Fira Code', monospace;
 }
 
@@ -212,7 +208,6 @@ button {
     font-size: 1.1em;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
     background: linear-gradient(145deg, #c7a46c, #e6b17a);
     color: #23201b;
     margin-top: inherit;
@@ -226,7 +221,7 @@ button {
 
 button:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(199, 164, 108, 0.3);
+    box-shadow: 0 6px 15px rgba(199, 164, 108, 0.3);
 }
 
 button:active {
@@ -306,7 +301,6 @@ button i {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: all 0.3s ease;
 }
 
 #domain-list li:hover {
@@ -357,7 +351,6 @@ button i {
     padding: 0.8em 1.5em;
     background: rgba(199, 164, 108, 0.1);
     border-radius: 25px;
-    transition: all 0.3s ease;
     margin-bottom: 1em;
 }
 
