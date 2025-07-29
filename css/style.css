@@ -6,11 +6,18 @@
 }
 
 body {
-    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+    background: linear-gradient(-45deg, #353535, #584a30, #3d3321, #1E1E1EDE, #493d28, #000);
     color: #faf3e3;
-    min-height: 100vh;
+    height: 100vh;
     direction: rtl;
-    transition: all 0.3s ease;
+    background-size: 400% 400%;
+    animation: gradientMove 23s ease-in-out infinite;
+}
+
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 body[lang='en'] {
