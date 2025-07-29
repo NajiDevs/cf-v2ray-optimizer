@@ -10,8 +10,8 @@ body {
     color: #faf3e3;
     height: 100vh;
     direction: rtl;
-    background-size: 400% 400%;
-    animation: gradientMove 23s ease-in-out infinite;
+    background-size: 700% 700%;
+    animation: gradientMove 25s ease-in-out infinite;
 }
 
 @keyframes gradientMove {
