@@ -100,13 +100,13 @@ You can manage your configuration ports in three ways:
 ---
 
 ## 📁 Project Structure
-
+```
 cf-v2ray-optimizer/
 ├── cf-v2ray-optimizer.html  # Main optimizer
 ├── assets/
 │   └── Logo.png             # Logo
 └── README.md                # This file
-
+```
 
 ## 🛠️ Technologies Used
 
