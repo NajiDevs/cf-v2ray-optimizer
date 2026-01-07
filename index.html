@@ -45,9 +45,30 @@
                     >
                 </div>
                 <div class="form-group">
+                    <label id="optimization-mode-label">بهینه‌سازی کن</label>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <button class="mode-btn active" data-mode="domain" style="flex: 1; background: #c7a46c; color: #23201b; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            <i class="fas fa-globe"></i> دامنه
+                        </button>
+                        <button class="mode-btn" data-mode="ip" style="flex: 1; background: rgba(199, 164, 108, 0.2); color: #c7a46c; border: 1px solid #c7a46c; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            <i class="fas fa-network-wired"></i> آی‌پی تمیز
+                        </button>
+                    </div>
+
+                    <div id="ip-scan-settings" style="display: none; background: rgba(199, 164, 108, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid rgba(199, 164, 108, 0.2);">
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; margin-bottom: 5px; font-size: 0.9em;">حداکثر تعداد اسکن:</label>
+                            <input type="number" id="max-scan-input" value="500" min="50" max="2000" style="width: 100%; padding: 8px; background: rgba(30, 27, 23, 0.5); border: 1px solid rgba(199, 164, 108, 0.2); color: #faf3e3; border-radius: 6px;" />
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-size: 0.9em;">حداکثر پینگ قبول‌شده (ms):</label>
+                            <input type="number" id="max-ping-input" value="200" min="50" max="1000" style="width: 100%; padding: 8px; background: rgba(30, 27, 23, 0.5); border: 1px solid rgba(199, 164, 108, 0.2); color: #faf3e3; border-radius: 6px;" />
+                        </div>
+                    </div>
+
                     <textarea
                         id="config-input"
-                        placeholder="کانفیگ vless:// یا trojan:// خود را اینجا قرار دهید"
+                        placeholder="کانفیگ vless://, trojan:// یا vmess:// خود را اینجا قرار دهید"
                     ></textarea>
                     <button id="optimize-btn">
                         <i class="fas fa-rocket"></i> بهینه‌سازی کن
@@ -77,7 +98,7 @@
                     <span id="contact-developer">ارتباط با توسعه دهنده</span>
                 </a>
                 <p class="copyright">
-                    © NajiDevs - 2025 All rights reserved. No part of this
+                    © NajiDevs - 026 All rights reserved. No part of this
                     website may be reproduced, distributed, or transmitted in
                     any form or by any means without the prior written
                     permission of the owner 
