@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V2Ray Config Optimizer</title>
+    <title>V2Ray Config Optimizer - Professional</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
     
@@ -86,21 +86,17 @@
 
         // --- CLOUDFLARE IP RANGES ---
         const CLOUDFLARE_RANGES = [
-            "173.245.48.0/20",
-            "103.21.244.0/22",
-            "103.22.200.0/22",
-            "103.31.4.0/22",
-            "141.101.64.0/18",
-            "108.162.192.0/18",
-            "190.93.240.0/20",
-            "188.114.96.0/20",
-            "197.234.240.0/22",
-            "198.41.128.0/17",
-            "162.158.0.0/15",
-            "104.16.0.0/13",
+            "172.67.128.0/17",
+            "104.19.0.0/16",
+            "5.226.179.0/24",
+            "172.64.106.33",
+            "31.22.116.16",
+            "104.18.128.0/17",
+            "172.64.80.0/20",
+            "104.16.0.0/15",
             "104.24.0.0/14",
-            "172.64.0.0/13",
-            "131.0.72.0/22"
+            "104.21.0.0/17",
+            "23.227.60.0/24"
         ];
 
         // --- DOMAINS FOR TESTING ---
@@ -461,9 +457,18 @@
                 let scannedCount = 0;
                 const batchSize = 5;
                 const ipResults = []; // Store IP results separately
+                const scannedIPs = new Set(); // Track IPs that have already been scanned
 
                 while (!stopSignal.current && foundCount < config.targetCount && scannedCount < config.maxScanLimit) {
-                    const batchIPs = Array.from({ length: batchSize }, () => getRandomIpFromRanges(rangesList));
+                    // Generate unique IPs for this batch
+                    const batchIPs = [];
+                    while (batchIPs.length < batchSize) {
+                        const ip = getRandomIpFromRanges(rangesList);
+                        if (!scannedIPs.has(ip)) {
+                            batchIPs.push(ip);
+                            scannedIPs.add(ip);
+                        }
+                    }
                     
                     const promises = batchIPs.map(async (ip) => {
                         const ping = await measureLatency(ip, config.port);
@@ -483,7 +488,7 @@
                         }
                     }
 
-                    setStats(prev => ({ ...prev, scanned: prev.scanned + batchSize }));
+                    setStats(prev => ({ ...prev, scanned: prev.scanned + batchIPs.length }));
                     await new Promise(r => setTimeout(r, 50));
                 }
                 
