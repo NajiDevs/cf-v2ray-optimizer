@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V2Ray Config Optimizer - Professional</title>
+    <title>V2Ray Config Optimizer</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
     
@@ -457,9 +457,18 @@
                 let scannedCount = 0;
                 const batchSize = 5;
                 const ipResults = []; // Store IP results separately
+                const scannedIPs = new Set(); // Track IPs that have already been scanned
 
                 while (!stopSignal.current && foundCount < config.targetCount && scannedCount < config.maxScanLimit) {
-                    const batchIPs = Array.from({ length: batchSize }, () => getRandomIpFromRanges(rangesList));
+                    // Generate unique IPs for this batch
+                    const batchIPs = [];
+                    while (batchIPs.length < batchSize) {
+                        const ip = getRandomIpFromRanges(rangesList);
+                        if (!scannedIPs.has(ip)) {
+                            batchIPs.push(ip);
+                            scannedIPs.add(ip);
+                        }
+                    }
                     
                     const promises = batchIPs.map(async (ip) => {
                         const ping = await measureLatency(ip, config.port);
