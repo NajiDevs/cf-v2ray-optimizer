@@ -8,7 +8,7 @@
 
 ## 🇮🇷 توضیحات فارسی
 
-این ابزار به شما کمک می‌کند تا کانفیگ‌های اختصاصی خود را که با Cloudflare Workers ساخته‌اید، بهینه‌سازی کنید و عملکرد نهایی آنها را به بهترین سرعت ممکن برسانید.
+این ابزار به شما کمک می‌کند تا کانفیگ‌های اختصاصی خود را که با Cloudflare Workers ساخته‌اید یا کانفیگ هایی که دامنه ی آنها را پشت سی دی ان قرار داده اید، بهینه‌سازی کنید و عملکرد نهایی آنها را به بهترین سرعت ممکن برسانید.
 
 ### 🎯 راهنمای انتخاب حالت بهینه‌سازی
 
@@ -53,8 +53,7 @@
 ---
 
 ## 🇺🇸 English Description
-
-This tool helps you optimize your custom V2Ray configurations created using Cloudflare Workers for maximum performance.
+This tool helps optimize your V2Ray configurations, whether created with Cloudflare Workers or using Cloudflare CDN-based domains, for maximum performance.
 
 ### 🎯 Optimization Mode Guide
 
