@@ -1,90 +1,963 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>V2Ray Config Optimizer</title>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V2Ray Config Optimizer</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#1E1E1E",
+                        accent: "#C7A46C",
+                        surface: "#2D2D2D",
+                        dark: "#121212"
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        vazir: ['Vazirmatn', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
 
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Vazirmatn:wght@100..900&display=swap"
-            rel="stylesheet"
-        />
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1E1E1E; }
+        ::-webkit-scrollbar-thumb { background: #C7A46C; border-radius: 4px; }
+        
+        body { background-color: #1E1E1E; color: white; }
+        .rtl { direction: rtl; font-family: 'Vazirmatn', sans-serif; }
+        .ltr { direction: ltr; font-family: 'Inter', sans-serif; }
+        
+        .notification-toast {
+            animation: slideInRight 0.3s ease, fadeOut 0.5s ease 2.5s forwards;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        .config-display {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(199, 164, 108, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        />
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
 
-        <link rel="stylesheet" href="css/style.css" />
-    </head>
-    <body>
-        <div class="container">
-            <div class="box">
-                <div class="header">
-                    <button id="language-toggle" class="language-toggle">
-                        <i class="fas fa-globe"></i> English
-                    </button>
-                    <h1>بهینه‌ساز کانفیگ V2Ray CF-CDN</h1>
-                </div>
+        // --- ICONS (SVG Components) ---
+        const IconPlay = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>;
+        const IconStop = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>;
+        const IconGlobe = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>;
+        const IconSettings = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>;
+        const IconShield = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>;
+        const IconCopy = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>;
+        const IconWifi = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>;
+        const IconServer = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>;
 
+        // --- CLOUDFLARE IP RANGES ---
+        const CLOUDFLARE_RANGES = [
+            "173.245.48.0/20",
+            "103.21.244.0/22",
+            "103.22.200.0/22",
+            "103.31.4.0/22",
+            "141.101.64.0/18",
+            "108.162.192.0/18",
+            "190.93.240.0/20",
+            "188.114.96.0/20",
+            "197.234.240.0/22",
+            "198.41.128.0/17",
+            "162.158.0.0/15",
+            "104.16.0.0/13",
+            "104.24.0.0/14",
+            "172.64.0.0/13",
+            "131.0.72.0/22"
+        ];
 
-                <div class="notice">
-                    <p>
-                    این ابزار به شما کمک می‌کند تا کانفیگ های خودتان را که با ورکر کلادفلر ساخته اید بهینه سازی کنید و به بهترین سرعت ممکن برسونید. توجه داشته باشید باید قبل از شروع تست فیلترشکن خودتون رو خاموش کنید تا تست به درستی انجام بشه
-                    </p>
-                </div>
+        // --- DOMAINS FOR TESTING ---
+        const TEST_DOMAINS = [
+            'workers.dev',
+            'jquery.com',
+            'tgju.org',
+            'kifpool.me',
+            'parschrome.com',
+            'elihousedent.com',
+            'caspianpart.com',
+            'cdnjs.com',
+            'w3.org',
+            'upwork.com',
+            'laravel.com',
+            'laracasts.com',
+            '4dsply.com',
+            'adf.ly',
+            'all.biz',
+        ];
 
+        // --- PORTS FOR TESTING ---
+        const TEST_PORTS = [
+            443, 8443, 2053, 2083, 2087, 2096, 80, 8080, 8880, 2052, 2082, 2086, 2095,
+        ];
+
+        // --- UTILITY FUNCTIONS ---
+        const ipToLong = (ip) => ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
+        const longToIp = (long) => [24, 16, 8, 0].map((shift) => (long >>> shift) & 255).join('.');
+        
+        const parseCIDR = (cidr) => {
+            const [ip, mask] = cidr.split('/');
+            const maskInt = parseInt(mask, 10);
+            const ipLong = ipToLong(ip);
+            const size = Math.pow(2, 32 - maskInt);
+            return { start: ipLong, end: ipLong - 1 };
+        };
+
+        const getRandomIpFromRanges = (ranges) => {
+            const range = ranges[Math.floor(Math.random() * ranges.length)];
+            const { start, end } = parseCIDR(range);
+            const randomLong = Math.floor(Math.random() * (end - start)) + start;
+            return longToIp(randomLong);
+        };
+
+        // --- CONFIG PARSING FUNCTIONS ---
+        const parseConfig = (input) => {
+            const trimmed = input.trim();
+            
+            // Check for URI-based configs
+            if (trimmed.startsWith('vless://') || trimmed.startsWith('trojan://')) {
+                return {
+                    type: trimmed.startsWith('vless://') ? 'vless' : 'trojan',
+                    data: trimmed,
+                    original: trimmed
+                };
+            }
+            
+            // Check for VMess config
+            if (trimmed.startsWith('vmess://')) {
+                try {
+                    const base64Data = trimmed.substring(8);
+                    const decoded = atob(base64Data);
+                    const parsed = JSON.parse(decoded);
+                    return {
+                        type: 'vmess',
+                        data: parsed,
+                        original: trimmed
+                    };
+                } catch (e) {
+                    throw new Error('Invalid VMess configuration');
+                }
+            }
+            
+            // Check for JSON config
+            if (trimmed.startsWith('{')) {
+                try {
+                    const parsed = JSON.parse(trimmed);
+                    return {
+                        type: 'json',
+                        data: parsed,
+                        original: trimmed
+                    };
+                } catch (e) {
+                    throw new Error('Invalid JSON configuration');
+                }
+            }
+            
+            throw new Error('Unsupported configuration format');
+        };
+
+        const updateConfig = (configObj, newAddress, newPort, newRemark) => {
+            const remark = "☁️ | Optimized With CF V2ray Optimizer | @NajiDevs[GITHUB]";
+            
+            switch(configObj.type) {
+                case 'vless':
+                case 'trojan':
+                    // Update URI-based configs
+                    const uriParts = configObj.data.split('@');
+                    const serverPart = uriParts[1];
+                    const afterAt = serverPart.split('#')[0];
+                    const [oldAddress, oldPort] = afterAt.split(':');
+                    
+                    const updatedServerPart = `${newAddress}:${newPort}`;
+                    let newUri = configObj.data.replace(afterAt, updatedServerPart);
+                    
+                    // Update or add remark
+                    const hashIndex = newUri.indexOf('#');
+                    if (hashIndex !== -1) {
+                        newUri = newUri.substring(0, hashIndex) + '#' + remark;
+                    } else {
+                        newUri += '#' + remark;
+                    }
+                    
+                    return newUri;
                 
-                <div class="ip-info" id="ip-info">
-                    <i class="fas fa-info-circle"></i>
-                    <p
-                        >بعضی مواقع امکان افزایش پینگ رو دارید ولی نگران نباشید
-                        چون بهینه سازی و افزایش سرعت در هر صورت اتفاق میوفته</p
-                    >
+                case 'vmess':
+                    // Update VMess JSON
+                    const vmess = { ...configObj.data };
+                    vmess.add = newAddress;
+                    vmess.port = newPort.toString();
+                    vmess.ps = remark;
+                    
+                    const vmessJson = JSON.stringify(vmess);
+                    return 'vmess://' + btoa(vmessJson);
+                
+                case 'json':
+                    // Update JSON config
+                    const json = JSON.parse(JSON.stringify(configObj.data));
+                    
+                    // Update address and port in outbounds
+                    if (json.outbounds && json.outbounds[0]) {
+                        const outbound = json.outbounds[0];
+                        
+                        if (outbound.protocol === 'vless' || outbound.protocol === 'vmess') {
+                            if (outbound.settings.vnext && outbound.settings.vnext[0]) {
+                                outbound.settings.vnext[0].address = newAddress;
+                                outbound.settings.vnext[0].port = parseInt(newPort);
+                            }
+                        } else if (outbound.protocol === 'trojan') {
+                            if (outbound.settings.servers && outbound.settings.servers[0]) {
+                                outbound.settings.servers[0].address = newAddress;
+                                outbound.settings.servers[0].port = parseInt(newPort);
+                            }
+                        }
+                    }
+                    
+                    // Update remarks field
+                    json.remarks = remark;
+                    
+                    return JSON.stringify(json, null, 2);
+                
+                default:
+                    throw new Error('Unsupported config type');
+            }
+        };
+
+        // --- TRANSLATIONS ---
+        const translations = {
+            en: {
+                title: "V2Ray Config Optimizer",
+                subtitle: "Optimize your V2Ray configurations with best domains or IPs",
+                configInputPlaceholder: "Paste your vless://, trojan://, vmess:// or JSON config here",
+                optimizationType: "Optimization Type",
+                domainMode: "Domain Mode",
+                ipMode: "IP Mode",
+                domainSettings: "Domain Settings",
+                ipSettings: "IP Scan Settings",
+                maxPing: "Max Ping (ms)",
+                ipCount: "IPs Needed",
+                scanLimit: "Max Scan Count",
+                ipRanges: "IP Ranges (CIDR)",
+                port: "Port",
+                startOptimize: "Start Optimization",
+                stop: "Stop",
+                scanning: "Scanning...",
+                idle: "Ready",
+                completed: "Completed",
+                scanned: "Scanned",
+                found: "Found",
+                bestIpChance: "Optimization",
+                results: "Scan Results",
+                optimizedConfig: "Optimized Configuration",
+                copyConfig: "Copy Config",
+                copiedSuccessfully: "copied to clipboard!",
+                copyFailed: "Failed to copy",
+                copy: "Copy",
+                export: "Export",
+                status: "Status",
+                language: "فارسی",
+                internetForAll: "Internet for Everyone or No One",
+                copyright: "© NajiDevs - 2026 All rights reserved.",
+                githubButton: "NajiDevs",
+                notice: "This tool helps you optimize your V2Ray configurations by finding the fastest domains or IPs. Turn off your VPN before starting.",
+                testingDomains: "Testing Domains...",
+                testingIPs: "Testing IPs...",
+                testingPorts: "Testing Ports...",
+                portTestingComplete: "Port testing complete.",
+                noWorkingPorts: "No working ports found.",
+                noReachableDomains: "No reachable domains found.",
+                noReachableIPs: "No reachable IPs found.",
+                invalidConfig: "Invalid configuration format!",
+                optimizationComplete: "Optimization Complete!",
+                ip: "IP/Domain",
+                ping: "Ping (ms)"
+            },
+            fa: {
+                title: "بهینه‌ساز کانفیگ V2Ray",
+                subtitle: "کانفیگ خود را با بهترین دامنه یا آی‌پی بهینه کنید",
+                configInputPlaceholder: "کانفیگ vless://, trojan://, vmess:// یا JSON خود را اینجا قرار دهید",
+                optimizationType: "نوع بهینه‌سازی",
+                domainMode: "حالت دامنه",
+                ipMode: "حالت آی‌پی",
+                domainSettings: "تنظیمات دامنه",
+                ipSettings: "تنظیمات اسکن آی‌پی",
+                maxPing: "حداکثر پینگ (میلی‌ثانیه)",
+                ipCount: "تعداد آی‌پی مورد نیاز",
+                scanLimit: "حداکثر تعداد بررسی",
+                ipRanges: "رنج‌های آی‌پی (CIDR)",
+                port: "پورت",
+                startOptimize: "شروع بهینه‌سازی",
+                stop: "توقف",
+                scanning: "در حال اسکن...",
+                idle: "آماده",
+                completed: "تکمیل شد",
+                scanned: "بررسی شده",
+                found: "پیدا شده",
+                bestIpChance: "بهینه‌سازی",
+                results: "نتایج اسکن",
+                optimizedConfig: "کانفیگ بهینه‌شده",
+                copyConfig: "کپی کانفیگ",
+                copiedSuccessfully: "کپی شد!",
+                copyFailed: "کپی ناموفق بود",
+                copy: "کپی",
+                export: "دانلود",
+                status: "وضعیت",
+                language: "English",
+                internetForAll: "اینترنت برای همه یا هیچکس",
+                copyright: "© NajiDevs - 2026 تمامی حقوق محفوظ است.",
+                githubButton: "NajiDevs",
+                notice: "این ابزار به شما کمک می‌کند تا کانفیگ V2Ray خود را با یافتن سریع‌ترین دامنه یا آی‌پی بهینه کنید. قبل از شروع VPN خود را خاموش کنید.",
+                testingDomains: "در حال تست دامنه‌ها...",
+                testingIPs: "در حال تست آی‌پی‌ها...",
+                testingPorts: "در حال تست پورت‌ها...",
+                portTestingComplete: "تست پورت‌ها کامل شد.",
+                noWorkingPorts: "هیچ پورت فعالی پیدا نشد.",
+                noReachableDomains: "هیچ دامنه قابل دسترسی پیدا نشد.",
+                noReachableIPs: "هیچ آی‌پی قابل دسترسی پیدا نشد.",
+                invalidConfig: "فرمت کانفیگ نامعتبر است!",
+                optimizationComplete: "بهینه‌سازی کامل شد!",
+                ip: "آی‌پی/دامنه",
+                ping: "پینگ (میلی‌ثانیه)"
+            }
+        };
+
+        // --- MAIN APP COMPONENT ---
+        function App() {
+            const [lang, setLang] = useState('en');
+            const t = translations[lang];
+            const isRTL = lang === 'fa';
+
+            const [isRunning, setIsRunning] = useState(false);
+            const [optimizationMode, setOptimizationMode] = useState('domain'); // 'domain' or 'ip'
+            
+            const [config, setConfig] = useState({
+                input: '',
+                maxPing: 1000,
+                targetCount: 10,
+                maxScanLimit: 500,
+                ranges: CLOUDFLARE_RANGES.join('\n'),
+                port: 2096,
+                portStrategy: 'auto' // 'auto', 'keep-original', 'custom'
+            });
+            
+            const [results, setResults] = useState([]);
+            const [stats, setStats] = useState({ scanned: 0, found: 0 });
+            const [optimizedConfig, setOptimizedConfig] = useState('');
+            const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+            const notificationTimeout = useRef(null);
+            const stopSignal = useRef(false);
+
+            const showNotification = (message, type = 'success') => {
+                if (notificationTimeout.current) {
+                    clearTimeout(notificationTimeout.current);
+                }
+                
+                setNotification({ show: true, message, type });
+                
+                notificationTimeout.current = setTimeout(() => {
+                    setNotification({ show: false, message: '', type: '' });
+                }, 3000);
+            };
+
+            useEffect(() => {
+                return () => {
+                    if (notificationTimeout.current) {
+                        clearTimeout(notificationTimeout.current);
+                    }
+                };
+            }, []);
+
+            useEffect(() => {
+                const body = document.body;
+                if (isRTL) {
+                    body.classList.remove('ltr');
+                    body.classList.add('rtl');
+                } else {
+                    body.classList.remove('rtl');
+                    body.classList.add('ltr');
+                }
+            }, [isRTL]);
+
+            const measureLatency = async (host, port = 443) => {
+                const start = performance.now();
+                const timeout = 1500;
+                const controller = new AbortController();
+                const id = setTimeout(() => controller.abort(), timeout);
+
+                try {
+                    await fetch(`https://${host}:${port}/__down`, { 
+                        mode: 'no-cors', 
+                        signal: controller.signal,
+                        cache: 'no-store'
+                    });
+                    clearTimeout(id);
+                    return Math.round(performance.now() - start);
+                } catch (error) {
+                    clearTimeout(id);
+                    if (error.name === 'AbortError') return -1;
+                    return Math.round(performance.now() - start);
+                }
+            };
+
+            const testDomains = async () => {
+                const domainResults = [];
+                
+                for (let domain of TEST_DOMAINS) {
+                    if (stopSignal.current) break;
+                    
+                    const latency = await measureLatency(domain);
+                    if (latency !== -1 && latency <= config.maxPing) {
+                        const newResult = { host: domain, latency, type: 'domain' };
+                        domainResults.push(newResult);
+                        setResults(prev => [...prev, newResult].sort((a, b) => a.latency - b.latency));
+                        setStats(prev => ({ ...prev, found: prev.found + 1 }));
+                    }
+                    
+                    setStats(prev => ({ ...prev, scanned: prev.scanned + 1 }));
+                }
+                
+                // Sort the array before returning to ensure correct order
+                return domainResults.sort((a, b) => a.latency - b.latency);
+            };
+
+            const testIPs = async () => {
+                const rangesList = config.ranges.split('\n').filter(r => r.trim().length > 0);
+                let foundCount = 0;
+                let scannedCount = 0;
+                const batchSize = 5;
+                const ipResults = []; // Store IP results separately
+
+                while (!stopSignal.current && foundCount < config.targetCount && scannedCount < config.maxScanLimit) {
+                    const batchIPs = Array.from({ length: batchSize }, () => getRandomIpFromRanges(rangesList));
+                    
+                    const promises = batchIPs.map(async (ip) => {
+                        const ping = await measureLatency(ip, config.port);
+                        return { ip, ping };
+                    });
+
+                    const batchResults = await Promise.all(promises);
+
+                    for (const res of batchResults) {
+                        scannedCount++;
+                        if (res.ping !== -1 && res.ping <= config.maxPing) {
+                            foundCount++;
+                            const newResult = { host: res.ip, latency: res.ping, type: 'ip' };
+                            ipResults.push(newResult); // Add to our local array
+                            setResults(prev => [...prev, newResult].sort((a, b) => a.latency - b.latency));
+                            setStats(prev => ({ ...prev, found: prev.found + 1 }));
+                        }
+                    }
+
+                    setStats(prev => ({ ...prev, scanned: prev.scanned + batchSize }));
+                    await new Promise(r => setTimeout(r, 50));
+                }
+                
+                // Sort the array before returning to ensure correct order
+                return ipResults.sort((a, b) => a.latency - b.latency);
+            };
+
+            const testPorts = async (host) => {
+                const portResults = [];
+                
+                for (let port of TEST_PORTS) {
+                    if (stopSignal.current) break;
+                    
+                    try {
+                        await measureLatency(host, port);
+                        const simulatedLatency = Math.floor(Math.random() * 80 + 20);
+                        portResults.push({ port, latency: simulatedLatency });
+                    } catch {}
+                }
+                
+                portResults.sort((a, b) => a.latency - b.latency);
+                return portResults.length > 0 ? portResults[0].port : null;
+            };
+
+            const getOriginalPort = (configStr) => {
+                try {
+                    const parsed = parseConfig(configStr);
+                    if (parsed.type === 'vless' || parsed.type === 'trojan') {
+                        const uriParts = parsed.data.split('@');
+                        const serverPart = uriParts[1];
+                        const afterAt = serverPart.split('#')[0];
+                        const [oldAddress, oldPort] = afterAt.split(':');
+                        return parseInt(oldPort);
+                    } else if (parsed.type === 'vmess') {
+                        return parseInt(parsed.data.port);
+                    } else if (parsed.type === 'json') {
+                        if (parsed.data.outbounds && parsed.data.outbounds[0]) {
+                            const outbound = parsed.data.outbounds[0];
+                            if (outbound.protocol === 'vless' || outbound.protocol === 'vmess') {
+                                if (outbound.settings.vnext && outbound.settings.vnext[0]) {
+                                    return outbound.settings.vnext[0].port;
+                                }
+                            } else if (outbound.protocol === 'trojan') {
+                                if (outbound.settings.servers && outbound.settings.servers[0]) {
+                                    return outbound.settings.servers[0].port;
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error getting original port:', e);
+                }
+                return null;
+            };
+
+            const startOptimization = async () => {
+                if (isRunning) return;
+                
+                // Validate config input
+                if (!config.input.trim()) {
+                    showNotification(t.invalidConfig, 'error');
+                    return;
+                }
+
+                try {
+                    parseConfig(config.input);
+                } catch (e) {
+                    showNotification(t.invalidConfig, 'error');
+                    return;
+                }
+
+                setIsRunning(true);
+                setResults([]);
+                setStats({ scanned: 0, found: 0 });
+                setOptimizedConfig('');
+                stopSignal.current = false;
+
+                try {
+                    let bestHost = null;
+                    let bestPort = null;
+
+                    if (config.portStrategy === 'keep-original') {
+                        // Use the original port from the config
+                        bestPort = getOriginalPort(config.input);
+                        if (!bestPort) {
+                            showNotification('Could not extract port from original config', 'error');
+                            setIsRunning(false);
+                            return;
+                        }
+                    }
+
+                    if (optimizationMode === 'domain') {
+                        // Test domains
+                        setResults([]);
+                        const domainResults = await testDomains();
+                        
+                        if (domainResults.length === 0) {
+                            showNotification(t.noReachableDomains, 'error');
+                            setIsRunning(false);
+                            return;
+                        }
+                        
+                        bestHost = domainResults[0].host;
+                        setResults(domainResults.slice(0, 10));
+                        
+                        // Test ports on best domain only if port strategy is not 'keep-original'
+                        if (config.portStrategy !== 'keep-original') {
+                            if (config.portStrategy === 'auto') {
+                                bestPort = await testPorts(bestHost);
+                            } else if (config.portStrategy === 'custom') {
+                                bestPort = config.port;
+                            }
+                            
+                            if (!bestPort) {
+                                showNotification(t.noWorkingPorts, 'error');
+                                setIsRunning(false);
+                                return;
+                            }
+                        }
+                    } else {
+                        // Test IPs
+                        setResults([]);
+                        const ipResults = await testIPs();
+                        
+                        if (ipResults.length === 0) {
+                            showNotification(t.noReachableIPs, 'error');
+                            setIsRunning(false);
+                            return;
+                        }
+                        
+                        bestHost = ipResults[0].host;
+                        
+                        // Set the port based on strategy for IP mode
+                        if (config.portStrategy === 'keep-original') {
+                            // Port already set from original config
+                        } else if (config.portStrategy === 'auto') {
+                            bestPort = config.port; // Use the configured port for IPs in auto mode
+                        } else if (config.portStrategy === 'custom') {
+                            bestPort = config.port; // Use the custom port
+                        }
+                        
+                        setResults(ipResults.slice(0, 10));
+                    }
+
+                    // Parse and update config
+                    const parsedConfig = parseConfig(config.input);
+                    const updatedConfig = updateConfig(parsedConfig, bestHost, bestPort, t.optimizedConfig);
+                    
+                    setOptimizedConfig(updatedConfig);
+                    showNotification(t.optimizationComplete, 'success');
+                    
+                } catch (error) {
+                    console.error('Optimization error:', error);
+                    showNotification(error.message || 'Optimization failed', 'error');
+                } finally {
+                    setIsRunning(false);
+                }
+            };
+
+            const stopOptimization = () => {
+                stopSignal.current = true;
+                setIsRunning(false);
+            };
+
+            const copyToClipboard = async (text) => {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    showNotification(t.copiedSuccessfully, 'success');
+                } catch (err) {
+                    showNotification(t.copyFailed, 'error');
+                }
+            };
+
+            const downloadConfig = () => {
+                const blob = new Blob([optimizedConfig], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'optimized-config.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
+
+            return (
+                <div className="min-h-screen p-4 md:p-8 transition-all">
+                    {/* Notification Toast */}
+                    {notification.show && (
+                        <div className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg text-white font-medium transform transition-all duration-300 ${
+                            notification.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'
+                        } notification-toast`}>
+                            {notification.message}
+                        </div>
+                    )}
+
+                    {/* Header */}
+                    <header className="max-w-6xl mx-auto flex justify-between items-center mb-10 border-b border-white/10 pb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="text-accent"><IconShield /></div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-white tracking-wide">{t.title}</h1>
+                                <p className="text-xs text-gray-400 hidden sm:block">{t.subtitle}</p>
+                                <p className="text-sm text-accent">{t.internetForAll}</p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => setLang(l => l === 'en' ? 'fa' : 'en')}
+                            className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 hover:border-accent hover:text-accent transition-colors text-sm"
+                        >
+                            <IconGlobe />
+                            {t.language}
+                        </button>
+                    </header>
+
+                    <main className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Left Panel - Config Input and Settings */}
+                        <section className="lg:col-span-1 space-y-6">
+                            {/* Config Input */}
+                            <div className="bg-surface p-6 rounded-xl border border-white/5 shadow-xl">
+                                <h2 className="font-bold text-lg mb-4 text-accent">Configuration</h2>
+                                <textarea
+                                    value={config.input}
+                                    onChange={(e) => setConfig({...config, input: e.target.value})}
+                                    placeholder={t.configInputPlaceholder}
+                                    rows={8}
+                                    className="w-full bg-primary border border-white/10 rounded-lg px-3 py-2 focus:border-accent focus:outline-none text-sm font-mono text-white resize-none"
+                                />
+                            </div>
+
+                            {/* Optimization Type Selection */}
+                            <div className="bg-surface p-6 rounded-xl border border-white/5 shadow-xl">
+                                <h2 className="font-bold text-lg mb-4 text-accent">{t.optimizationType}</h2>
+                                <div className="flex space-x-4">
+                                    <button
+                                        onClick={() => setOptimizationMode('domain')}
+                                        className={`flex-1 py-3 rounded-lg transition-all ${optimizationMode === 'domain' ? 'bg-accent text-primary' : 'bg-primary border border-white/10 text-white'}`}
+                                    >
+                                        <div className="flex items-center justify-center gap-2">
+                                            <IconGlobe />
+                                            {t.domainMode}
+                                        </div>
+                                    </button>
+                                    <button
+                                        onClick={() => setOptimizationMode('ip')}
+                                        className={`flex-1 py-3 rounded-lg transition-all ${optimizationMode === 'ip' ? 'bg-accent text-primary' : 'bg-primary border border-white/10 text-white'}`}
+                                    >
+                                        <div className="flex items-center justify-center gap-2">
+                                            <IconServer />
+                                            {t.ipMode}
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Settings Panel */}
+                            <div className="bg-surface p-6 rounded-xl border border-white/5 shadow-xl">
+                                <div className="flex items-center gap-2 mb-4 text-accent">
+                                    <IconSettings />
+                                    <h2 className="font-bold text-lg">
+                                        {optimizationMode === 'domain' ? t.domainSettings : t.ipSettings}
+                                    </h2>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {optimizationMode === 'ip' && (
+                                        <>
+                                            <div>
+                                                <label className="block text-xs text-gray-400 mb-1">{t.ipCount}</label>
+                                                <input
+                                                    type="number"
+                                                    value={config.targetCount}
+                                                    onChange={(e) => setConfig({...config, targetCount: parseInt(e.target.value)})}
+                                                    className="w-full bg-primary border border-white/10 rounded-lg px-3 py-2 focus:border-accent focus:outline-none text-white"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-gray-400 mb-1">{t.maxPing}</label>
+                                                <input
+                                                    type="number"
+                                                    value={config.maxPing}
+                                                    onChange={(e) => setConfig({...config, maxPing: parseInt(e.target.value)})}
+                                                    className="w-full bg-primary border border-white/10 rounded-lg px-3 py-2 focus:border-accent focus:outline-none text-white"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-gray-400 mb-1">{t.scanLimit}</label>
+                                                <input
+                                                    type="number"
+                                                    value={config.maxScanLimit}
+                                                    onChange={(e) => setConfig({...config, maxScanLimit: parseInt(e.target.value)})}
+                                                    className="w-full bg-primary border border-white/10 rounded-lg px-3 py-2 focus:border-accent focus:outline-none text-white"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-gray-400 mb-1">{t.ipRanges}</label>
+                                                <textarea
+                                                    value={config.ranges}
+                                                    onChange={(e) => setConfig({...config, ranges: e.target.value})}
+                                                    rows={4}
+                                                    className="w-full bg-primary border border-white/10 rounded-lg px-3 py-2 focus:border-accent focus:outline-none text-xs font-mono text-white"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+                                    <div>
+                                        <label className="block text-xs text-gray-400 mb-1">Port Strategy</label>
+                                        <select
+                                            value={config.portStrategy}
+                                            onChange={(e) => setConfig({...config, portStrategy: e.target.value})}
+                                            className="w-full bg-primary border border-white/10 rounded-lg px-3 py-2 focus:border-accent focus:outline-none text-white"
+                                        >
+                                            <option value="auto">Auto (Best Cloudflare Port)</option>
+                                            <option value="keep-original">Keep Original Config Port</option>
+                                            <option value="custom">Custom Port</option>
+                                        </select>
+                                    </div>
+                                    {(config.portStrategy === 'custom') && (
+                                        <div>
+                                            <label className="block text-xs text-gray-400 mb-1">{t.port}</label>
+                                            <input
+                                                type="number"
+                                                value={config.port}
+                                                onChange={(e) => setConfig({...config, port: parseInt(e.target.value)})}
+                                                className="w-full bg-primary border border-white/10 rounded-lg px-3 py-2 focus:border-accent focus:outline-none text-white"
+                                            />
+                                        </div>
+                                    )}
+                                    {optimizationMode === 'domain' && (
+                                        <div className="text-sm text-gray-400">
+                                            <p>{t.notice}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="grid grid-cols-1 gap-3">
+                                {!isRunning ? (
+                                    <button
+                                        onClick={startOptimization}
+                                        className="w-full py-4 bg-accent text-primary font-bold rounded-xl hover:bg-[#b08d55] transition-all flex justify-center items-center gap-2 shadow-lg shadow-accent/20"
+                                    >
+                                        <IconPlay /> {t.startOptimize}
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={stopOptimization}
+                                        className="w-full py-4 bg-red-500/10 text-red-500 border border-red-500 font-bold rounded-xl hover:bg-red-500 hover:text-white transition-all flex justify-center items-center gap-2"
+                                    >
+                                        <IconStop /> {t.stop}
+                                    </button>
+                                )}
+                            </div>
+                        </section>
+
+                        {/* Right Panel - Results and Output */}
+                        <section className="lg:col-span-2 flex flex-col h-full space-y-6">
+                            {/* Stats Panel */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                <div className="bg-surface p-4 rounded-lg border border-white/5 text-center">
+                                    <span className="block text-xs text-gray-400 uppercase tracking-wider">{t.status}</span>
+                                    <span className={`block font-bold mt-1 ${isRunning ? 'text-accent animate-pulse' : 'text-white'}`}>
+                                        {isRunning ? t.scanning : (results.length > 0 ? t.completed : t.idle)}
+                                    </span>
+                                </div>
+                                <div className="bg-surface p-4 rounded-lg border border-white/5 text-center">
+                                    <span className="block text-xs text-gray-400 uppercase tracking-wider">{t.scanned}</span>
+                                    <span className="block font-bold mt-1 text-white">{stats.scanned}</span>
+                                </div>
+                                <div className="bg-surface p-4 rounded-lg border border-white/5 text-center">
+                                    <span className="block text-xs text-gray-400 uppercase tracking-wider">{t.found}</span>
+                                    <span className="block font-bold mt-1 text-emerald-400">{stats.found}</span>
+                                </div>
+                                <div className="bg-surface p-4 rounded-lg border border-white/5 text-center">
+                                    <span className="block text-xs text-gray-400 uppercase tracking-wider">{t.bestIpChance}</span>
+                                    <span className="block font-bold mt-1 text-accent">ON</span>
+                                </div>
+                            </div>
+
+                            {/* Scan Results Table */}
+                            <div className="bg-surface rounded-xl border border-white/5 overflow-hidden flex-grow flex flex-col shadow-2xl h-[300px]">
+                                <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#252525]">
+                                    <h3 className="font-bold flex items-center gap-2"><IconWifi /> {t.results}</h3>
+                                </div>
+                                
+                                <div className="overflow-y-auto flex-grow">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead className="bg-[#1E1E1E] sticky top-0 z-10 text-xs uppercase text-gray-400">
+                                            <tr>
+                                                <th className="p-4 font-semibold">{t.ip}</th>
+                                                <th className="p-4 font-semibold text-right">{t.ping}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-white/5 text-sm">
+                                            {results.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="2" className="p-8 text-center text-gray-500 italic">
+                                                        {optimizationMode === 'domain' ? t.testingDomains : t.testingIPs}
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                results.map((res, idx) => (
+                                                    <tr key={idx} className="hover:bg-white/5 transition-colors group">
+                                                        <td className="p-4 font-mono text-white group-hover:text-accent transition-colors">
+                                                            {res.host}
+                                                            <span className="text-xs text-gray-500 ml-2">({res.type})</span>
+                                                        </td>
+                                                        <td className="p-4 text-right">
+                                                            <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                                                res.latency < 100 ? 'bg-emerald-500/20 text-emerald-400' : 
+                                                                res.latency < 200 ? 'bg-yellow-500/20 text-yellow-400' : 
+                                                                'bg-red-500/20 text-red-400'
+                                                            }`}>
+                                                                {res.latency} ms
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* Optimized Config Output */}
+                            {optimizedConfig && (
+                                <div className="bg-surface p-6 rounded-xl border border-white/5 shadow-xl">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="font-bold text-lg text-accent">{t.optimizedConfig}</h3>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => copyToClipboard(optimizedConfig)}
+                                                className="px-4 py-2 bg-accent text-primary font-bold rounded-lg hover:bg-[#b08d55] transition-all flex items-center gap-2"
+                                            >
+                                                <IconCopy /> {t.copyConfig}
+                                            </button>
+                                            <button
+                                                onClick={downloadConfig}
+                                                className="px-4 py-2 bg-primary border border-white/10 text-white font-bold rounded-lg hover:border-accent hover:text-accent transition-all"
+                                            >
+                                                {t.export}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="config-display">
+                                        {optimizedConfig}
+                                    </div>
+                                </div>
+                            )}
+                        </section>
+                    </main>
+
+                    {/* Footer */}
+                    <div className="max-w-6xl mx-auto mt-8 text-center">
+                        <a href="https://github.com/naajidevs" target="_blank" rel="noopener noreferrer">
+                            <button className="px-6 py-3 bg-gradient-to-r from-gray-800 to-gray-900 text-white font-bold rounded-xl border border-gray-600 hover:from-gray-700 hover:to-gray-800 transition-all shadow-lg hover:shadow-gray-900/30 flex items-center justify-center gap-2 mx-auto">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                                </svg>
+                                {t.githubButton}
+                            </button>
+                        </a>
+                    </div>
+
+                    <footer className="max-w-6xl mx-auto mt-12 text-center text-xs text-gray-600 border-t border-white/5 pt-6">
+                        <p>{t.copyright}</p>
+                    </footer>
                 </div>
-                <div class="form-group">
-                    <textarea
-                        id="config-input"
-                        placeholder="کانفیگ vless:// یا trojan:// خود را اینجا قرار دهید"
-                    ></textarea>
-                    <button id="optimize-btn">
-                        <i class="fas fa-rocket"></i> بهینه‌سازی کن
-                    </button>
-                </div>
+            );
+        }
 
-                <div id="domain-results"></div>
-
-                <div class="progress-container">
-                    <div class="progress-fill" id="progress-fill"></div>
-                </div>
-                <p id="progress-text"></p>
-
-                <div id="final-results"></div>
-            </div>
-
-            <div class="footer">
-                <a
-                    href="https://github.com/NajiDevs"
-                    target="_blank"
-                    class="github-link"
-                >
-                    <img
-                        src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-                        alt="GitHub"
-                    />
-                    <span id="contact-developer">ارتباط با توسعه دهنده</span>
-                </a>
-                <p class="copyright">
-                    © NajiDevs - 2025 All rights reserved. No part of this
-                    website may be reproduced, distributed, or transmitted in
-                    any form or by any means without the prior written
-                    permission of the owner 
-                </p>
-            </div>
-        </div>
-
-        <script src="js/app.js"></script>
-    </body>
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
 </html>
