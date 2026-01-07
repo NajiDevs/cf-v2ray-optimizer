@@ -457,18 +457,9 @@
                 let scannedCount = 0;
                 const batchSize = 5;
                 const ipResults = []; // Store IP results separately
-                const scannedIPs = new Set(); // Track IPs that have already been scanned
 
                 while (!stopSignal.current && foundCount < config.targetCount && scannedCount < config.maxScanLimit) {
-                    // Generate unique IPs for this batch
-                    const batchIPs = [];
-                    while (batchIPs.length < batchSize) {
-                        const ip = getRandomIpFromRanges(rangesList);
-                        if (!scannedIPs.has(ip)) {
-                            batchIPs.push(ip);
-                            scannedIPs.add(ip);
-                        }
-                    }
+                    const batchIPs = Array.from({ length: batchSize }, () => getRandomIpFromRanges(rangesList));
                     
                     const promises = batchIPs.map(async (ip) => {
                         const ping = await measureLatency(ip, config.port);
@@ -488,7 +479,7 @@
                         }
                     }
 
-                    setStats(prev => ({ ...prev, scanned: prev.scanned + batchIPs.length }));
+                    setStats(prev => ({ ...prev, scanned: prev.scanned + batchSize }));
                     await new Promise(r => setTimeout(r, 50));
                 }
                 
